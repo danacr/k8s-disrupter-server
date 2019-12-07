@@ -44,6 +44,7 @@ func disrupt(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.StatusText(200)
+		fmt.Println(Phone)
 	default:
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
 	}
