@@ -1,13 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"cloud.google.com/go/pubsub"
@@ -20,21 +17,6 @@ import (
 type Device struct {
 	Name string
 	ID   string
-}
-
-type Payload struct {
-	Target  Target  `json:"target"`
-	Command Command `json:"command"`
-}
-type Target struct {
-	Type  string `json:"type"`
-	Hosts string `json:"hosts"`
-	Exact int    `json:"exact"`
-}
-type Command struct {
-	Type        string   `json:"type"`
-	CommandType string   `json:"commandType"`
-	Args        []string `json:"args"`
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +35,6 @@ func disrupt(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		// err = rebootnode(os.Getenv("GREMLIN_TEAM_ID"), os.Getenv("GREMLIN_API_KEY"))
 		instancelist, err := getinstances()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -83,14 +64,6 @@ func disrupt(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var err error
-	if os.Getenv("GREMLIN_TEAM_ID") == "" {
-		err = errors.New("GREMLIN_TEAM_ID env var required")
-		log.Fatal(err)
-	}
-	if os.Getenv("GREMLIN_API_KEY") == "" {
-		err = errors.New("GREMLIN_API_KEY env var required")
-		log.Fatal(err)
-	}
 	if err = serviceAccount(); err != nil {
 		log.Fatal(err)
 	}
@@ -100,41 +73,6 @@ func main() {
 	if err = http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func rebootnode(teamid, apikey string) error {
-	data := Payload{
-		Target: Target{
-			Type:  "Random",
-			Hosts: "all",
-			Exact: 1,
-		},
-		Command: Command{
-			Type:        "shutdown",
-			CommandType: "Shutdown",
-			Args:        []string{"-r", "-d", "0"},
-		},
-	}
-	payloadBytes, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	body := bytes.NewReader(payloadBytes)
-
-	req, err := http.NewRequest("POST", "https://api.gremlin.com/v1/attacks/new?teamId="+teamid, body)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Key "+apikey)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	log.Panicln("Triggered Node Reboot")
-	return nil
 }
 
 // serviceAccount shows how to use a service account to authenticate.
