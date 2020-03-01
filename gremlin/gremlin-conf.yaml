@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gremlin-conf
+  namespace: gremlin
+type: Opaque
+stringData:
+  GREMLIN_TEAM_ID: "GREMLIN_TEAM_ID"
+  GREMLIN_CLUSTER_ID: "chaotic-cluster"
